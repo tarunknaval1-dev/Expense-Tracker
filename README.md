@@ -10,6 +10,7 @@ This project helps users add, view, and delete their daily expenses. All expense
 - Add new expenses
 - Add expense name, category, amount, and date
 - View all saved expenses
+- view categoy-wise spending summary
 - Calculate total expenses
 - Delete an expense
 - Save expense data in `expenses.json`
