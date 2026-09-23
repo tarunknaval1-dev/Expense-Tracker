@@ -29,7 +29,7 @@ def add_expense(expenses):
 
     expense = {
         "name": name,
-        "category": category,
+        "category": category or "Other",
         "amount": amount,
         "date": str(date.today())
     }
@@ -59,6 +59,30 @@ def view_expenses(expenses):
     print(f"\nTotal expense: Rs. {total:.2f}\n")
 
 
+def category_summary(expenses):
+    if not expenses:
+        print("\nNo expenses found.\n")
+        return
+
+    categories = {}
+
+    for expense in expenses:
+        category = expense["category"]
+        amount = expense["amount"]
+
+        if category in categories:
+            categories[category] += amount
+        else:
+            categories[category] = amount
+
+    print("\n--- Category-wise Spending ---")
+
+    for category, total in categories.items():
+        print(f"{category}: Rs. {total:.2f}")
+
+    print()
+
+
 def delete_expense(expenses):
     view_expenses(expenses)
 
@@ -67,6 +91,7 @@ def delete_expense(expenses):
 
     try:
         number = int(input("Enter expense number to delete: "))
+
         if number < 1 or number > len(expenses):
             print("Invalid expense number.")
             return
@@ -86,8 +111,9 @@ def main():
         print("\n--- Expense Tracker ---")
         print("1. Add Expense")
         print("2. View Expenses")
-        print("3. Delete Expense")
-        print("4. Exit")
+        print("3. Category-wise Summary")
+        print("4. Delete Expense")
+        print("5. Exit")
 
         choice = input("Choose an option: ")
 
@@ -96,8 +122,10 @@ def main():
         elif choice == "2":
             view_expenses(expenses)
         elif choice == "3":
-            delete_expense(expenses)
+            category_summary(expenses)
         elif choice == "4":
+            delete_expense(expenses)
+        elif choice == "5":
             print("Thank you for using Expense Tracker!")
             break
         else:
