@@ -1,3 +1,4 @@
+import csv
 import json
 from datetime import date
 from pathlib import Path
@@ -34,11 +35,17 @@ def add_expense(expenses):
     name = input("Enter expense name: ").strip()
     category = input("Enter category: ").strip()
 
+    if not name:
+        print("Expense name cannot be empty.")
+        return
+
     try:
         amount = float(input("Enter amount: "))
+
         if amount <= 0:
             print("Amount must be greater than zero.")
             return
+
     except ValueError:
         print("Please enter a valid amount.")
         return
@@ -52,6 +59,7 @@ def add_expense(expenses):
 
     expenses.append(expense)
     save_expenses(expenses)
+
     print("Expense added successfully!")
 
 
@@ -61,6 +69,7 @@ def view_expenses(expenses):
         return
 
     total = 0
+
     print("\n--- Your Expenses ---")
 
     for index, expense in enumerate(expenses, start=1):
@@ -70,6 +79,7 @@ def view_expenses(expenses):
             f"Rs. {expense['amount']:.2f} | "
             f"{expense['date']}"
         )
+
         total += expense["amount"]
 
     print(f"\nTotal expense: Rs. {total:.2f}\n")
@@ -84,7 +94,9 @@ def category_summary(expenses):
 
     for expense in expenses:
         category = expense["category"]
-        categories[category] = categories.get(category, 0) + expense["amount"]
+        amount = expense["amount"]
+
+        categories[category] = categories.get(category, 0) + amount
 
     print("\n--- Category-wise Spending ---")
 
@@ -97,6 +109,7 @@ def category_summary(expenses):
 def set_monthly_budget():
     try:
         budget = float(input("Enter your monthly budget: "))
+
         if budget <= 0:
             print("Budget must be greater than zero.")
             return
@@ -145,10 +158,30 @@ def delete_expense(expenses):
 
         removed = expenses.pop(number - 1)
         save_expenses(expenses)
+
         print(f"{removed['name']} deleted successfully!")
 
     except ValueError:
         print("Please enter a valid number.")
+
+
+def export_to_csv(expenses):
+    if not expenses:
+        print("\nNo expenses available to export.\n")
+        return
+
+    file_name = "expenses_export.csv"
+
+    with open(file_name, "w", newline="") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=["name", "category", "amount", "date"]
+        )
+
+        writer.writeheader()
+        writer.writerows(expenses)
+
+    print(f"\nExpenses exported successfully to {file_name}\n")
 
 
 def main():
@@ -162,25 +195,36 @@ def main():
         print("4. Set Monthly Budget")
         print("5. View Budget Status")
         print("6. Delete Expense")
-        print("7. Exit")
+        print("7. Export Expenses to CSV")
+        print("8. Exit")
 
         choice = input("Choose an option: ")
 
         if choice == "1":
             add_expense(expenses)
+
         elif choice == "2":
             view_expenses(expenses)
+
         elif choice == "3":
             category_summary(expenses)
+
         elif choice == "4":
             set_monthly_budget()
+
         elif choice == "5":
             budget_status(expenses)
+
         elif choice == "6":
             delete_expense(expenses)
+
         elif choice == "7":
+            export_to_csv(expenses)
+
+        elif choice == "8":
             print("Thank you for using Expense Tracker!")
             break
+
         else:
             print("Invalid choice. Try again.")
 
