@@ -11,12 +11,12 @@ This project helps users add, view, and delete their daily expenses. All expense
 - Add expense name, category, amount, and date
 - View all saved expenses
 - view categoy-wise spending summary
-
 - Calculate total expenses
 - Delete an expense
 - Set a monthly spending budget
 - Check remaining budget or overspending amount
 - Save expense data in `expenses.json`
+- Export saved expenses to a CSV file for Excel
 
 ## Requirements
 
