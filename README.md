@@ -1,30 +1,249 @@
+import csv
+import json
+from datetime import date
+from pathlib import Path
 
-# Expense Tracker
+DATA_FILE = Path("expenses.json")
+BUDGET_FILE = Path("budget.json")
 
-A simple command-line Expense Tracker built using Python.
 
-This project helps users add, view, and delete their daily expenses. All expenses are saved locally in a JSON file, so the data remains available after closing the program.
+def load_expenses():
+    if DATA_FILE.exists():
+        with open(DATA_FILE, "r") as file:
+            return json.load(file)
+    return []
 
-## Features
 
-- Add new expenses
-- Add expense name, category, amount, and date
-- View all saved expenses
-- view categoy-wise spending summary
-- Calculate total expenses
-- Delete an expense
-- Set a monthly spending budget
-- Check remaining budget or overspending amount
-- Save expense data in `expenses.json`
-- Export saved expenses to a CSV file for Excel
+def save_expenses(expenses):
+    with open(DATA_FILE, "w") as file:
+        json.dump(expenses, file, indent=4)
 
-## Requirements
 
-- Python 3.x
+def load_budget():
+    if BUDGET_FILE.exists():
+        with open(BUDGET_FILE, "r") as file:
+            return json.load(file).get("monthly_budget", 0)
+    return 0
 
-## How to Run
 
-1. Clone this repository:
+def save_budget(budget):
+    with open(BUDGET_FILE, "w") as file:
+        json.dump({"monthly_budget": budget}, file, indent=4)
 
-```bash
-git clone https://github.com/tarunknaval1-dev/expense-tracker.git
+
+def show_expense_list(expenses, heading="Your Expenses"):
+    if not expenses:
+        print("\nNo expenses found.\n")
+        return
+
+    total = 0
+
+    print(f"\n--- {heading} ---")
+
+    for index, expense in enumerate(expenses, start=1):
+        print(
+            f"{index}. {expense['name']} | "
+            f"{expense['category']} | "
+            f"Rs. {expense['amount']:.2f} | "
+            f"{expense['date']}"
+        )
+        total += expense["amount"]
+
+    print(f"\nTotal expense: Rs. {total:.2f}\n")
+
+
+def add_expense(expenses):
+    name = input("Enter expense name: ").strip()
+    category = input("Enter category: ").strip()
+
+    if not name:
+        print("Expense name cannot be empty.")
+        return
+
+    try:
+        amount = float(input("Enter amount: "))
+
+        if amount <= 0:
+            print("Amount must be greater than zero.")
+            return
+
+    except ValueError:
+        print("Please enter a valid amount.")
+        return
+
+    expense = {
+        "name": name,
+        "category": category or "Other",
+        "amount": amount,
+        "date": str(date.today())
+    }
+
+    expenses.append(expense)
+    save_expenses(expenses)
+
+    print("Expense added successfully!")
+
+
+def view_expenses(expenses):
+    show_expense_list(expenses)
+
+
+def category_summary(expenses):
+    if not expenses:
+        print("\nNo expenses found.\n")
+        return
+
+    categories = {}
+
+    for expense in expenses:
+        category = expense["category"]
+        amount = expense["amount"]
+
+        categories[category] = categories.get(category, 0) + amount
+
+    print("\n--- Category-wise Spending ---")
+
+    for category, total in categories.items():
+        print(f"{category}: Rs. {total:.2f}")
+
+    print()
+
+
+def search_by_category(expenses):
+    category = input("Enter category to search: ").strip().lower()
+
+    if not category:
+        print("Category cannot be empty.")
+        return
+
+    matching_expenses = [
+        expense for expense in expenses
+        if expense["category"].lower() == category
+    ]
+
+    show_expense_list(
+        matching_expenses,
+        f"Expenses in {category.title()} Category"
+    )
+
+
+def set_monthly_budget():
+    try:
+        budget = float(input("Enter your monthly budget: "))
+
+        if budget <= 0:
+            print("Budget must be greater than zero.")
+            return
+
+        save_budget(budget)
+        print(f"Monthly budget set to Rs. {budget:.2f}")
+
+    except ValueError:
+        print("Please enter a valid amount.")
+
+
+def budget_status(expenses):
+    budget = load_budget()
+
+    if budget == 0:
+        print("\nNo monthly budget has been set yet.\n")
+        return
+
+    total_spent = sum(expense["amount"] for expense in expenses)
+    remaining = budget - total_spent
+
+    print("\n--- Monthly Budget Status ---")
+    print(f"Budget: Rs. {budget:.2f}")
+    print(f"Spent: Rs. {total_spent:.2f}")
+
+    if remaining >= 0:
+        print(f"Remaining: Rs. {remaining:.2f}")
+    else:
+        print(f"Over budget by: Rs. {abs(remaining):.2f}")
+
+    print()
+
+
+def delete_expense(expenses):
+    view_expenses(expenses)
+
+    if not expenses:
+        return
+
+    try:
+        number = int(input("Enter expense number to delete: "))
+
+        if number < 1 or number > len(expenses):
+            print("Invalid expense number.")
+            return
+
+        removed = expenses.pop(number - 1)
+        save_expenses(expenses)
+
+        print(f"{removed['name']} deleted successfully!")
+
+    except ValueError:
+        print("Please enter a valid number.")
+
+
+def export_to_csv(expenses):
+    if not expenses:
+        print("\nNo expenses available to export.\n")
+        return
+
+    file_name = "expenses_export.csv"
+
+    with open(file_name, "w", newline="") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=["name", "category", "amount", "date"]
+        )
+
+        writer.writeheader()
+        writer.writerows(expenses)
+
+    print(f"\nExpenses exported successfully to {file_name}\n")
+
+
+def main():
+    expenses = load_expenses()
+
+    while True:
+        print("\n--- Expense Tracker ---")
+        print("1. Add Expense")
+        print("2. View Expenses")
+        print("3. Category-wise Summary")
+        print("4. Search Expenses by Category")
+        print("5. Set Monthly Budget")
+        print("6. View Budget Status")
+        print("7. Delete Expense")
+        print("8. Export Expenses to CSV")
+        print("9. Exit")
+
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            add_expense(expenses)
+        elif choice == "2":
+            view_expenses(expenses)
+        elif choice == "3":
+            category_summary(expenses)
+        elif choice == "4":
+            search_by_category(expenses)
+        elif choice == "5":
+            set_monthly_budget()
+        elif choice == "6":
+            budget_status(expenses)
+        elif choice == "7":
+            delete_expense(expenses)
+        elif choice == "8":
+            export_to_csv(expenses)
+        elif choice == "9":
+            print("Thank you for using Expense Tracker!")
+            break
+        else:
+            print("Invalid choice. Try again.")
+
+
+if __name__ == "__main__":
+    main()
