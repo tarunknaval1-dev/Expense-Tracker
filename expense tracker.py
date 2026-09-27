@@ -239,7 +239,7 @@ def main():
         elif choice == "8":
             export_to_csv(expenses)
         elif choice == "9":
-            print("Thank you for using Expense Tracker!")
+            print("Thank you for using Expense Tracker!!")
             break
         else:
             print("Invalid choice. Try again.")
